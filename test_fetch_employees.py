@@ -1,3 +1,4 @@
+from contextlib import closing
 import sqlite3
 import tempfile
 import unittest
@@ -16,7 +17,7 @@ class FetchEmployeesTests(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def create_employee_table(self):
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             connection.execute("""
                 CREATE TABLE employees (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,7 +29,7 @@ class FetchEmployeesTests(unittest.TestCase):
 
     def test_fetches_employee_records(self):
         self.create_employee_table()
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             connection.execute(
                 "INSERT INTO employees (name, designation, salary) VALUES (?, ?, ?)",
                 ("Jane Doe", "Engineer", 72000),
@@ -55,7 +56,7 @@ class FetchEmployeesTests(unittest.TestCase):
         self.assertFalse(self.database.exists())
 
     def test_raises_error_when_employees_table_is_missing(self):
-        with sqlite3.connect(self.database):
+        with closing(sqlite3.connect(self.database)):
             pass
 
         with patch.object(fetch_employees, "DATABASE", self.database):
